@@ -83,7 +83,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="card">
-        <div class="label">Current Temperature</div>
+        <div class="label">Temperatura</div>
         <div id="reading"><div class="no-data">Loading...</div></div>
     </div>
     <script>
