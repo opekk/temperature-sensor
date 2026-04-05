@@ -82,7 +82,7 @@ def get_history(period):
                 AVG(temperature),
                 strftime('%Y-%m-%dT%H:', recorded_at) ||
                     printf('%02d', (CAST(strftime('%M', recorded_at) AS INT) / ? * ?)) ||
-                    ':00' as bucket
+                    ':00+00:00' as bucket
             FROM readings
             WHERE recorded_at > ?
             GROUP BY bucket
