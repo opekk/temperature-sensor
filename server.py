@@ -94,40 +94,64 @@ def get_history(period):
 
 
 HTML_TEMPLATE = """<!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensors | sensors.opekk.dev</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --cream: #E6E3C7;
+            --dark: #21201C;
+            --gold: #D69F1F;
+            --cream-dim: #D8D5B8;
+            --dark-soft: #3D3A33;
+            --gold-light: #F5E6B8;
+            --gold-dark: #A47A12;
+            --text-secondary: #6B6860;
+        }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--dark);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
             min-height: 100vh;
-            padding: 2rem 1rem;
+            padding: 3rem 2rem;
         }
         .container {
             max-width: 850px;
             margin: 0 auto;
         }
-        h1 {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #64748b;
-            margin-bottom: 1.5rem;
-            letter-spacing: 0.05em;
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--gold-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .section-label::before {
+            content: '';
+            width: 20px;
+            height: 2px;
+            background: var(--gold);
+            display: inline-block;
         }
         .card {
-            background: #1e293b;
-            border-radius: 1rem;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+            background: rgba(255,255,255,0.35);
+            border: 1px solid var(--cream-dim);
+            border-radius: 12px;
             padding: 2rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         .temp-display {
             display: flex;
@@ -139,17 +163,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         .temp-main {
             display: flex;
             align-items: baseline;
-            gap: 0.3rem;
+            gap: 0.2rem;
         }
-        .temp-value { font-size: 4rem; font-weight: 700; line-height: 1; }
-        .temp-unit { font-size: 1.5rem; color: #94a3b8; }
-        .temp-label { font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem; }
+        .temp-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 4rem;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+        .temp-unit {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
         .updated {
             font-size: 0.8rem;
-            color: #475569;
+            color: var(--text-secondary);
             text-align: right;
         }
-        .updated.stale { color: #f59e0b; }
+        .updated.stale { color: #b45309; }
         .stats {
             display: flex;
             gap: 1.5rem;
@@ -160,33 +192,44 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             flex-direction: column;
             gap: 0.15rem;
         }
-        .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
         .stat-value { font-size: 1.1rem; font-weight: 600; }
-        .stat-value.low { color: #38bdf8; }
-        .stat-value.high { color: #f87171; }
-        .stat-value.avg { color: #a78bfa; }
-        .no-data { font-size: 1.3rem; color: #475569; padding: 1rem 0; }
+        .stat-value.low { color: #2563eb; }
+        .stat-value.high { color: #dc2626; }
+        .stat-value.avg { color: var(--gold-dark); }
+        .no-data { font-size: 1.3rem; color: var(--text-secondary); padding: 1rem 0; }
         .period-buttons {
             display: flex;
             gap: 0.4rem;
             margin-bottom: 1.2rem;
         }
         .period-btn {
-            padding: 0.5rem 1.2rem;
-            border: 1px solid #334155;
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--dark);
             background: transparent;
-            color: #94a3b8;
-            border-radius: 0.5rem;
+            color: var(--dark);
+            border-radius: 100px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.15s;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            transition: all 0.25s ease;
         }
         .period-btn.active {
-            background: #3b82f6;
-            color: #fff;
-            border-color: #3b82f6;
+            background: var(--dark);
+            color: var(--cream);
         }
-        .period-btn:hover:not(.active) { background: #334155; }
+        .period-btn:hover:not(.active) {
+            background: var(--dark);
+            color: var(--cream);
+        }
         .chart-wrap { position: relative; min-height: 200px; }
         .chart-empty {
             position: absolute;
@@ -194,10 +237,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #475569;
+            color: var(--text-secondary);
             font-size: 0.95rem;
         }
         @media (max-width: 500px) {
+            body { padding: 2rem 1rem; }
             .temp-value { font-size: 3rem; }
             .temp-display { flex-direction: column; gap: 0.5rem; }
             .updated { text-align: left; }
@@ -206,11 +250,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <h1>sensors.opekk.dev</h1>
+        <div class="section-label">Temperatura</div>
         <div class="card">
-            <div class="temp-label">Temperatura</div>
             <div id="reading"><div class="no-data">Loading...</div></div>
         </div>
+        <div class="section-label">Historia</div>
         <div class="card">
             <div class="period-buttons">
                 <button class="period-btn active" data-period="1h">1h</button>
@@ -218,13 +262,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
             <div id="stats" class="stats" style="margin-bottom:1rem"></div>
             <div class="chart-wrap">
-                <div id="chartEmpty" class="chart-empty">No history data yet</div>
+                <div id="chartEmpty" class="chart-empty">Brak danych</div>
                 <canvas id="tempChart"></canvas>
             </div>
         </div>
     </div>
     <script>
-        // Live temperature update
         async function updateTemp() {
             try {
                 const res = await fetch("/api/temperature");
@@ -247,22 +290,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                         el.innerHTML = '<div class="temp-display"><div class="temp-main"><span class="temp-value">' + data.temperature.toFixed(1) + '</span><span class="temp-unit">\\u00b0C</span></div></div>';
                     }
                 } else {
-                    el.innerHTML = '<div class="no-data">No data yet</div>';
+                    el.innerHTML = '<div class="no-data">Brak danych</div>';
                 }
             } catch (e) {}
         }
         updateTemp();
         setInterval(updateTemp, 1000);
 
-        // Chart
         const ctx = document.getElementById("tempChart").getContext("2d");
         const chart = new Chart(ctx, {
             type: "line",
             data: {
                 datasets: [{
                     label: "Temperature",
-                    borderColor: "#3b82f6",
-                    backgroundColor: "rgba(59, 130, 246, 0.08)",
+                    borderColor: "#A47A12",
+                    backgroundColor: "rgba(214,159,31,0.08)",
                     borderWidth: 2,
                     pointRadius: 0,
                     pointHitRadius: 10,
@@ -278,26 +320,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 scales: {
                     x: {
                         type: "time",
-                        ticks: { color: "#64748b", maxTicksLimit: 6, font: { size: 11 } },
-                        grid: { color: "rgba(51,65,85,0.5)" }
+                        ticks: { color: "#6B6860", maxTicksLimit: 6, font: { family: "DM Sans", size: 11 } },
+                        grid: { color: "rgba(216,213,184,0.7)" }
                     },
                     y: {
                         ticks: {
-                            color: "#64748b",
-                            font: { size: 11 },
+                            color: "#6B6860",
+                            font: { family: "DM Sans", size: 11 },
                             callback: function(v) { return v.toFixed(1) + "\\u00b0"; }
                         },
-                        grid: { color: "rgba(51,65,85,0.5)" }
+                        grid: { color: "rgba(216,213,184,0.7)" }
                     }
                 },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: "#1e293b",
-                        borderColor: "#334155",
+                        backgroundColor: "#21201C",
+                        borderColor: "#3D3A33",
                         borderWidth: 1,
-                        titleColor: "#94a3b8",
-                        bodyColor: "#e2e8f0",
+                        titleColor: "#D8D5B8",
+                        bodyColor: "#E6E3C7",
+                        titleFont: { family: "DM Sans" },
+                        bodyFont: { family: "DM Sans" },
                         padding: 10,
                         callbacks: {
                             label: function(ctx) { return " " + ctx.parsed.y.toFixed(1) + "\\u00b0C"; }
