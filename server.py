@@ -327,9 +327,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                         ticks: {
                             color: "#6B6860",
                             font: { family: "DM Sans", size: 11 },
+                            stepSize: 0.5,
                             callback: function(v) { return v.toFixed(1) + "\\u00b0"; }
                         },
-                        grid: { color: "rgba(216,213,184,0.7)" }
+                        grid: { color: "rgba(216,213,184,0.7)" },
+                        afterDataLimits: function(axis) {
+                            const range = axis.max - axis.min;
+                            if (range < 2) {
+                                const mid = (axis.max + axis.min) / 2;
+                                axis.min = Math.floor(mid - 1);
+                                axis.max = Math.ceil(mid + 1);
+                            }
+                        }
                     }
                 },
                 plugins: {
